@@ -5,6 +5,8 @@ from langchain_core.tools import tool
 from utils import get_secret
 import boto3
 import json
+from typing import Optional, Literal
+
 
 @tool
 def generate_salesforce_oauth_url(profile_id: str) -> str:
@@ -104,7 +106,74 @@ def execute_salesforce_soql(soql_query: str, profile_id: str) -> list[dict]:
 
     return resp.json().get("records", [])
 
-   
+@tool
+def execute_salesforce_rest(
+    object_type: str,
+    operation: Literal["create", "update"],
+    data: dict,
+    profile_id: str,
+    record_id: Optional[str] = None
+) -> dict:
+    """
+    Create or update a Salesforce object.
+
+    Args:
+        object_type (str): Salesforce object name (e.g., "Opportunity", "Account").
+        operation (str): One of "create" or "update".
+        data (dict): Fields and values to set.
+        profile_id (str): wa_id to look up Salesforce credentials.
+        record_id (str, optional): Required for update operation.
+
+    Returns:
+        dict: Salesforce API response.
+
+    Raises:
+        Exception: On credential or API failure.
+    """
+    table_name = os.getenv("SF_DDB_TABLE")
+    api_version = os.getenv("SF_API_VERSION", "v60.0")
+
+    if not table_name:
+        raise EnvironmentError("Missing SF_DDB_TABLE env variable.")
+
+    ddb = boto3.resource("dynamodb")
+    table = ddb.Table(table_name)
+    response = table.get_item(Key={"wa_id": str(profile_id)})
+
+    if "Item" not in response:
+        raise Exception(f"No record found for wa_id: {profile_id}")
+
+    item = response["Item"]
+    access_token = item.get("access_token")
+    instance_url = item.get("instance_url")
+
+    if not access_token or not instance_url:
+        raise Exception("Missing access_token or instance_url")
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    if operation == "create":
+        url = f"{instance_url}/services/data/{api_version}/sobjects/{object_type}/"
+        resp = requests.post(url, headers=headers, json=data)
+
+    elif operation == "update":
+        if not record_id:
+            raise ValueError("record_id is required for update.")
+        url = f"{instance_url}/services/data/{api_version}/sobjects/{object_type}/{record_id}"
+        resp = requests.patch(url, headers=headers, json=data)
+
+    else:
+        raise ValueError(f"Unsupported operation: {operation}")
+
+    if resp.status_code not in (200, 201, 204):
+        raise Exception(f"Salesforce API failed: {resp.status_code} - {resp.text}")
+
+    return resp.json() if resp.content else {"success": True}
+
+
 @tool
 def send_whatsapp_message(recipient, message):
     """
@@ -186,4 +255,4 @@ def send_email_via_ses(email_json: str):
         return f"Error sending email: {str(e)}"
 
 
-tool_list = [generate_salesforce_oauth_url, execute_salesforce_soql, send_email_via_ses, send_whatsapp_message]
+tool_list = [generate_salesforce_oauth_url, execute_salesforce_soql, send_email_via_ses, send_whatsapp_message, execute_salesforce_rest]
