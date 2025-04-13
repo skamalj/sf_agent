@@ -1,0 +1,8 @@
+requests
+langchain-core
+langchain-openai
+langgraph
+langchain
+langgraph_dynamodb_checkpoint
+langgraph-utils
+langgraph-reducer

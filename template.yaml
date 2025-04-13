@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Salesforce agent
+
+  SAM Template for Salesforce agent
+
+Globals:
+  Function:
+    Timeout: 20  # Increased timeout since SQS processing may take longer
+
+Parameters:
+  SFClientIDSecretName:
+    Type: String
+    Default: "sf_client_id"
+    Description: "Name of the secret in AWS Secrets Manager for whatsapp token"
+  WhatsappAPISecretName:
+    Type: String
+    Default: "WhatsAppAPIToken"
+    Description: "Name of the secret in AWS Secrets Manager for whatsapp token"
+  WhatsappNumberIDSecretname:
+    Type: String
+    Default: "WhatsappNumberID"
+    Description: "Name of the secret in AWS Secrets Manager for whatsapp Number ID"
+  ApiGWKey:
+    Type: String
+    Default: "ApiGWKey"
+    Description: "Name of the secret in AWS Secrets Manager"
+  ApiGWEndpoint:
+    Type: String
+    Default: "ApiGWEndpoint"
+    Description: "Name of the secret in AWS Secrets Manager"
+Resources:
+
+  # Lambda Function
+  SFAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: operator/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      MemorySize: 512
+      Timeout: 60
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          SALESFORCE_DOMAIN: "velocity-ruby-3676.my.salesforce.com"
+          SALESFORCE_REDIRECT_URI: "https://hhtiphxg61.execute-api.ap-south-1.amazonaws.com/Prod/callback/"
+          SF_DDB_TABLE: "UserProfiles"
+          SF_API_VERSION: "v60.0"
+          MODEL_NAME: "gpt-4o"
+          PROVIDER_NAME: "openai"
+          MSG_HISTORY_TO_KEEP: 20
+          DELETE_TRIGGER_COUNT: 30
+          API_GW_URL: !Sub "{{resolve:secretsmanager:${ApiGWEndpoint}}}"
+          API_GW_KEY: !Sub "{{resolve:secretsmanager:${ApiGWKey}}}"
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy: 
+            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SFClientIDSecretName}-*"
+        - AWSSecretsManagerGetSecretValuePolicy: 
+            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${WhatsappAPISecretName}-*"
+        - AWSSecretsManagerGetSecretValuePolicy: 
+            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:WhatsappNumberID-*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Resource: "*"
+        - Statement:
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:UpdateTimeToLive
+            Resource: "*" # Allow access to all tables in this account
+        - Statement:
+          - Effect: Allow
+            Action:
+              - states:SendTaskSuccess
+              - states:SendTaskFailure
+            Resource: "*"  # Or restrict to specific state machine ARNs if you prefer
