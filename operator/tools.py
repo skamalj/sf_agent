@@ -125,7 +125,7 @@ def execute_salesforce_rest(
         record_id (str, optional): Required for update operation.
 
     Returns:
-        dict: Salesforce API response.
+        dict: Salesforce API response. List operations can return successful empty response when there is no data.
 
     Raises:
         Exception: On credential or API failure.
