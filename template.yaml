@@ -47,7 +47,7 @@ Resources:
         Variables:
           SALESFORCE_DOMAIN: "velocity-ruby-3676.my.salesforce.com"
           SALESFORCE_REDIRECT_URI: "https://hhtiphxg61.execute-api.ap-south-1.amazonaws.com/Prod/callback/"
-          SF_DDB_TABLE: "UserProfiles"
+          SF_DDB_TABLE: "salesforce_tokens"
           SF_API_VERSION: "v60.0"
           MODEL_NAME: "gpt-4o"
           PROVIDER_NAME: "openai"
