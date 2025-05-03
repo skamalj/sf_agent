@@ -120,6 +120,7 @@ def handle_message(channel_type, recipient, message):
 
     config = {"configurable": {"thread_id": profile_id}}
     response = app.invoke(input_message, config)
+    print("Unparsed Response:", response)
 
     # Step 4: Parse response from Comms-Agent and construct final return response
     agent_response = response["messages"][-1].content
