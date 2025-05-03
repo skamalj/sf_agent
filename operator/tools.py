@@ -255,4 +255,4 @@ def send_email_via_ses(email_json: str):
         return f"Error sending email: {str(e)}"
 
 
-tool_list = [generate_salesforce_oauth_url, execute_salesforce_soql, send_email_via_ses, send_whatsapp_message, execute_salesforce_rest]
+tool_list = [generate_salesforce_oauth_url, execute_salesforce_soql,execute_salesforce_rest]

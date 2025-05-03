@@ -111,7 +111,7 @@ def handle_message(channel_type, recipient, message):
         f"- Sent via: {channel_type}\n\n"
         f"Here are all associated user profiles:\n"
         f"{profile_info}\n\n"
-        f"Respond to user queries either on the originating channel or on the channel explicitly specified in the request.."
+        f"Respond to user queries either on the originating channel or on the channel explicitly specified in the request, with help of comms-agent"
     )
 
     input_message = {
@@ -120,11 +120,20 @@ def handle_message(channel_type, recipient, message):
 
     config = {"configurable": {"thread_id": profile_id}}
     response = app.invoke(input_message, config)
-    print("Response:", response)
+
+    # Step 4: Parse response from Comms-Agent and construct final return response
+    agent_response = response["messages"][-1].content
+
+    # Assuming the comms_agent_response is in the format:
+    # {"nextagent": "END", "message": "User-facing message delivered"}
+    parsed_response = json.loads(agent_response)
+
+    print("Response:", parsed_response)
 
     return {
-        "nextagent": "END",  # or another agent name if chaining
-        "message": response["messages"][-1].content,
+        "fromagent": "sf-agent",  # Identifying this agent
+        "nextagent": parsed_response.get("nextagent", ""),  # or another agent name if chaining
+        "message": parsed_response.get("message", ""),
         "thread_id": profile_id,
         "channel_type": channel_type,
         "from": recipient
