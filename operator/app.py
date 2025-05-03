@@ -123,7 +123,7 @@ def handle_message(channel_type, recipient, message):
     
     # Step 4: Parse response from Comms-Agent and construct final return response
     agent_response = response["messages"][-1].content
-    print("Unparsed Response:", response)
+    print("Unparsed Response:", agent_response)
 
     # Assuming the comms_agent_response is in the format:
     # {"nextagent": "END", "message": "User-facing message delivered"}
