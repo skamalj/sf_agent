@@ -113,8 +113,8 @@ def execute_salesforce_soql(soql_query: str, profile_id: str) -> list[dict]:
 def execute_salesforce_rest(
     object_type: str,
     operation: Literal["create", "update", "get"],
-    data: dict,
     profile_id: str,
+    data: dict = None,
     record_id: Optional[str] = None
 ) -> dict:
     """
@@ -126,10 +126,10 @@ def execute_salesforce_rest(
             For "get": Full REST path relative to `/services/data/<version>/`, 
             e.g., "chatter/users/me", "sobjects/Account/{id}", or "query?q=SELECT+Id+FROM+User".
         operation (str): One of "create", "update", or "get".
+        profile_id (str): wa_id used to retrieve Salesforce credentials from DynamoDB.
         data (dict): 
             For "create" and "update": Field values to set.
             For "get": Ignored (but must be provided due to tool signature).
-        profile_id (str): wa_id used to retrieve Salesforce credentials from DynamoDB.
         record_id (str, optional): Required for "update" to specify the record to modify.
 
     Returns:
