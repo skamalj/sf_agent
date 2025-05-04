@@ -52,6 +52,9 @@ def execute_salesforce_soql(soql_query: str, profile_id: str) -> list[dict]:
     Args:
         soql_query (str): The SOQL query to execute.
         profile_id (str): The wa_id used to look up Salesforce credentials in DynamoDB.
+                          This is NOT the Salesforce UserId. Use '$User.Id' inside your SOQL
+                          query to refer to the Salesforce user associated with the access_token
+                          retrieved via this wa_id.
 
     DynamoDB Table Schema (per item):
         - wa_id (str): Primary key
