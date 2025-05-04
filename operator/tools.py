@@ -52,8 +52,8 @@ def execute_salesforce_soql(soql_query: str, profile_id: str) -> list[dict]:
     Args:
         soql_query (str): The SOQL query to execute.
         profile_id (str): The wa_id used to look up Salesforce credentials in DynamoDB.
-                          This is NOT the Salesforce UserId. Use '$User.Id' inside your SOQL
-                          query to refer to the Salesforce user associated with the access_token
+                          This is NOT the Salesforce UserId. Use rest api tool to get userid
+                          to refer to the Salesforce user associated with the access_token
                           retrieved via this wa_id.
 
     DynamoDB Table Schema (per item):
@@ -112,26 +112,31 @@ def execute_salesforce_soql(soql_query: str, profile_id: str) -> list[dict]:
 @tool
 def execute_salesforce_rest(
     object_type: str,
-    operation: Literal["create", "update"],
+    operation: Literal["create", "update", "get"],
     data: dict,
     profile_id: str,
     record_id: Optional[str] = None
 ) -> dict:
     """
-    Create or update a Salesforce object.
+    Create, update, or fetch a Salesforce resource using the REST API.
 
     Args:
-        object_type (str): Salesforce object name (e.g., "Opportunity", "Account").
-        operation (str): One of "create" or "update".
-        data (dict): Fields and values to set.
-        profile_id (str): wa_id to look up Salesforce credentials.
-        record_id (str, optional): Required for update operation.
+        object_type (str): 
+            For "create"/"update": Salesforce object name (e.g., "Opportunity", "Account").
+            For "get": Full REST path relative to `/services/data/<version>/`, 
+            e.g., "chatter/users/me", "sobjects/Account/{id}", or "query?q=SELECT+Id+FROM+User".
+        operation (str): One of "create", "update", or "get".
+        data (dict): 
+            For "create" and "update": Field values to set.
+            For "get": Ignored (but must be provided due to tool signature).
+        profile_id (str): wa_id used to retrieve Salesforce credentials from DynamoDB.
+        record_id (str, optional): Required for "update" to specify the record to modify.
 
     Returns:
-        dict: Salesforce API response. List operations can return successful empty response when there is no data.
+        dict: Salesforce API response. For "get", returns full response body. For "create"/"update", success status or created object.
 
     Raises:
-        Exception: On credential or API failure.
+        Exception: If credentials are missing or API request fails.
     """
     table_name = os.getenv("SF_DDB_TABLE")
     api_version = os.getenv("SF_API_VERSION", "v60.0")
@@ -167,6 +172,9 @@ def execute_salesforce_rest(
             raise ValueError("record_id is required for update.")
         url = f"{instance_url}/services/data/{api_version}/sobjects/{object_type}/{record_id}"
         resp = requests.patch(url, headers=headers, json=data)
+    elif operation == "get":
+        url = f"{instance_url}/services/data/{api_version}/{object_type}"
+        resp = requests.get(url, headers=headers)
 
     else:
         raise ValueError(f"Unsupported operation: {operation}")
