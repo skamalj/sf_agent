@@ -11,8 +11,7 @@ from typing import Optional, Literal
 @tool
 def generate_salesforce_oauth_url(profile_id: str) -> str:
     """
-    Generates a Salesforce OAuth2 authorization URL using values from environment variables
-    and a provided profile_id.
+    Generates a Salesforce OAuth2 authorization URL for a user.
     
     Env Variables:
     - SALESFORCE_DOMAIN
