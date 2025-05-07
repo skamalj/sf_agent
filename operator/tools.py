@@ -122,8 +122,9 @@ def execute_salesforce_rest(
     Args:
         object_type (str): 
             For "create"/"update": Salesforce object name (e.g., "Opportunity", "Account").
-            For "get": Full REST path relative to `/services/data/<version>/`, 
-            e.g., "chatter/users/me", "sobjects/Account/{id}", or "query?q=SELECT+Id+FROM+User".
+            For "get": 
+            - Full REST path relative to `/services/data/<version>/`, 
+            - Or the literal string `"userinfo"` to retrieve authenticated user info from the Salesforce OAuth2 `/services/oauth2/userinfo` endpoint.
         operation (str): One of "create", "update", or "get".
         profile_id (str): wa_id used to retrieve Salesforce credentials from DynamoDB.
         data (dict): 
@@ -172,7 +173,11 @@ def execute_salesforce_rest(
         url = f"{instance_url}/services/data/{api_version}/sobjects/{object_type}/{record_id}"
         resp = requests.patch(url, headers=headers, json=data)
     elif operation == "get":
-        url = f"{instance_url}/services/data/{api_version}/{object_type}"
+        # If object_type is a known alias for user info, call the OAuth2 userinfo endpoint
+        if object_type == "userinfo":
+            url = f"{instance_url}/services/oauth2/userinfo"
+        else:
+            url = f"{instance_url}/services/data/{api_version}/{object_type}"
         resp = requests.get(url, headers=headers)
 
     else:
