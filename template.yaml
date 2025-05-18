@@ -55,6 +55,8 @@ Resources:
           DELETE_TRIGGER_COUNT: 30
           API_GW_URL: !Sub "{{resolve:secretsmanager:${ApiGWEndpoint}}}"
           API_GW_KEY: !Sub "{{resolve:secretsmanager:${ApiGWKey}}}"
+          USE_MCP: "Y"
+          MCP_SERVER_URL: "http://13.201.103.152:8000/mcp/"
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy: 
             SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SFClientIDSecretName}-*"

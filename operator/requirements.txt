@@ -6,3 +6,5 @@ langchain
 langgraph_dynamodb_checkpoint
 langgraph-utils
 langgraph-reducer
+langchain-mcp-adapters
+mcp
