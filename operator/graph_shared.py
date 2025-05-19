@@ -3,6 +3,7 @@ import os
 from langchain_core.messages import SystemMessage
 from langgraph_utils import call_model, create_tools_json
 from langgraph_reducer import PrunableStateFactory
+from langgraph.graph import END
 
 model_name = os.getenv("MODEL_NAME")
 provider_name = os.getenv("PROVIDER_NAME")
@@ -14,7 +15,7 @@ PrunableMessagesState = PrunableStateFactory.create_prunable_state(min_keep, max
 
 def should_continue(state) -> str:
     last_message = state['messages'][-1]
-    return "tools" if last_message.tool_calls else "END"
+    return "tools" if last_message.tool_calls else END
 
 def build_gw_model_fn(dynamic_tools):
     def call_gw_model(state):
