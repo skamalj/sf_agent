@@ -52,7 +52,7 @@ async def handle_message_mcp(channel_type, recipient, message):
 
             with DynamoDBSaver.from_conn_info(table_name="whatsapp_checkpoint", max_write_request_units=100, max_read_request_units=100, ttl_seconds=86400) as saver:
                 dynamic_app = graph.compile(checkpointer=saver)
-                response = dynamic_app.invoke(input_message, config)
+                response = await dynamic_app.ainvoke(input_message, config)
 
     agent_response = response["messages"][-1].content
     parsed_response = json.loads(agent_response)
