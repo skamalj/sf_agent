@@ -3,11 +3,25 @@ import os
 import boto3
 from handler_non_mcp import handle_message
 from handler_mcp import handle_message_mcp
+import asyncio
 
 stepfunctions = boto3.client("stepfunctions")
 
 USE_MCP = os.getenv("USE_MCP", "n").lower() == "y"
-handler = handle_message_mcp if USE_MCP else handle_message
+if USE_MCP:
+    handler = lambda event, context: asyncio.run(
+        handle_message_mcp(
+            event.get("channel_type"),
+            event.get("from"),
+            event.get("message")
+        )
+    )
+else:
+    handler = lambda event, context: handle_message(
+        event.get("channel_type"),
+        event.get("from"),
+        event.get("message")
+    )
 
 def lambda_handler(event, context):
     print("Received event:", json.dumps(event, indent=2))
