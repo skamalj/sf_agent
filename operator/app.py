@@ -21,6 +21,7 @@ def lambda_handler(event, context):
         message = input_data.get("message")
 
         result = handler(channel_type, recipient, message)
+        print("Handler result:", result)
         if result:
             stepfunctions.send_task_success(
                 taskToken=task_token,
