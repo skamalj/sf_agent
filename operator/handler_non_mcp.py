@@ -46,6 +46,7 @@ def handle_message(channel_type, recipient, message):
     config = {"configurable": {"thread_id": profile_id}}
 
     response = app.invoke(input_message, config)
+    print("Response from agent:", response)
     agent_response = response["messages"][-1].content
     parsed_response = json.loads(agent_response)
 

@@ -54,6 +54,7 @@ async def handle_message_mcp(channel_type, recipient, message):
                 dynamic_app = graph.compile(checkpointer=saver)
                 response = await dynamic_app.ainvoke(input_message, config)
 
+    print("Response from agent:", response)
     agent_response = response["messages"][-1].content
     parsed_response = json.loads(agent_response)
 
