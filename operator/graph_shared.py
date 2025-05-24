@@ -20,10 +20,14 @@ def should_continue(state) -> str:
 def build_gw_model_fn(dynamic_tools):
     def call_gw_model(state):
         with open("agent_prompt.txt", "r", encoding="utf-8") as file:
-            system_message = file.read()
+            system_prompt = file.read()
+        system_message = SystemMessage(content=system_prompt)
 
         messages = state["messages"]
-        messages.insert(0, SystemMessage(content=system_message))
+        if isinstance(messages[0], SystemMessage):
+            messages[0] = system_message
+        else:
+            messages.insert(0, system_message)
 
         json_tools = create_tools_json(dynamic_tools)
         response = call_model(model_name, provider_name, messages, json_tools)
